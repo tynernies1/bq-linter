@@ -25,9 +25,15 @@ Alternatively, you can install it directly from the marketplace link:
 - Click **Install** and follow the prompts to install the extension.
 
 ## Usage
-
+### Lint on save (default)
 - Open a `.sql` file in Visual Studio Code.
 - The extension will automatically perform a dry run against the BigQuery server and display any errors or warnings in the Problems panel and inline in the editor.
+
+### Manual Lint
+- Command pallet -> `>BQ Dry Run SQL Linter: Run Linting`
+
+### Live Lint
+- See below `sqlLinter.liveLinting` to enable, along with settings to customize frequency of BQ server connections to run the dry run process.
 
 ## Requirements
 
