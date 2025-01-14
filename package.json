@@ -1,0 +1,110 @@
+{
+  "name": "bq-dryrun-sql-linter",
+  "displayName": "BQ Dry Run SQL Linter",
+  "description": "An experimental VS Code extension checks SQL code against BQ dryrun in VS Code",
+  "version": "0.0.1",
+  "publisher": "timle",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/timle2/VSCode-Extension-BQ-Dry-Run-Linter"
+  },
+  "engines": {
+    "vscode": "^1.50.0"
+  },
+  "categories": [
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:sql",
+    "onCommand:sqlLinter.runLinting"
+  ],
+  "main": "./extension.js",
+  "files": [
+    "extension.js",
+    "images/icon.png",
+    "LICENSE.txt"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "sqlLinter.runLinting",
+        "title": "BQ Dry Run SQL Linter: Run Linting"
+      }
+    ],
+    "languages": [
+      {
+        "id": "sql",
+        "extensions": [
+          ".sql"
+        ],
+        "aliases": [
+          "SQL"
+        ]
+      }
+    ],
+    "diagnostics": [
+      {
+        "language": "sql",
+        "source": "sql-linter"
+      },
+      {
+        "source": "sql-linter"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "BQ Dry Run SQL Linter",
+      "properties": {
+        "sqlLinter.liveLinting": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable live linting"
+        },
+        "sqlLinter.debounceInterval": {
+          "type": "number",
+          "default": 500,
+          "description": "Debounce interval in milliseconds for live linting"
+        },
+        "sqlLinter.rateLimit": {
+          "type": "number",
+          "default": 10,
+          "description": "Maximum number of requests per minute for live linting"
+        }
+      }
+    },
+    "walkthroughs": [
+      {
+        "id": "sqlLinter.welcome",
+        "title": "Welcome to BQ Dry Run SQL Linter",
+        "description": "Learn how to use the BQ Dry Run SQL Linter extension.",
+        "steps": [
+          {
+            "id": "sqlLinter.welcome.step1",
+            "title": "Getting Started",
+            "description": "Open a `.sql` file and start writing SQL code. The extension will automatically perform a dry run against BigQuery and display any errors. Google auth default credentials (https://cloud.google.com/docs/authentication/application-default-credentials) are used for authentication.",
+            "media": {
+              "path": "images/icon.png",
+              "altText": "Extension Icon"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.6",
+    "@types/vscode": "^1.48.0",
+    "typescript": "^4.0.3",
+    "vscode-test": "^1.3.0"
+  },
+  "dependencies": {
+    "@google-cloud/bigquery": "^7.4.0",
+    "lodash.debounce": "^4.0.8"
+  }
+}
