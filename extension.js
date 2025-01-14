@@ -34,8 +34,36 @@ function activate(context) {
 
   // Function to perform linting
   const lintDocument = async (document, ignoreFileType = false) => {
-    if (!ignoreFileType && document.languageId !== 'sql') {
-      return;
+    if (!ignoreFileType) {
+      const documentLanguageId = document.languageId;
+      const documentPath = document.uri.fsPath;
+
+      // Get the configuration setting
+      const config = vscode.workspace.getConfiguration('sqlLinter');
+      const languageFolders = config.get('languageFolders', []);
+
+      let shouldLint = false;
+
+      // Check if the document matches any of the language-folder pairs
+      for (const entry of languageFolders) {
+        const languageId = entry.languageId;
+        const folderPath = entry.folderPath;
+
+        if (documentLanguageId === languageId && documentPath.includes(folderPath)) {
+          shouldLint = true;
+          break;
+        }
+      }
+
+      // If no matches found, check if document is 'sql' language
+      if (!shouldLint) {
+        if (documentLanguageId === 'sql') {
+          shouldLint = true;
+        } else {
+          // Do not lint this document
+          return;
+        }
+      }
     }
 
     const sqlCode = document.getText();
@@ -168,8 +196,40 @@ function activate(context) {
   // Update status bar visibility based on active editor
   function updateStatusBarVisibility() {
     const editor = vscode.window.activeTextEditor;
-    if (editor && (editor.document.languageId === 'sql')) {
-      statusBarItem.show();
+    if (editor) {
+      const document = editor.document;
+      const documentLanguageId = document.languageId;
+      const documentPath = document.uri.fsPath;
+
+      // Get the configuration setting
+      const config = vscode.workspace.getConfiguration('sqlLinter');
+      const languageFolders = config.get('languageFolders', []);
+
+      let shouldShow = false;
+
+      // Check if the document matches any of the language-folder pairs
+      for (const entry of languageFolders) {
+        const languageId = entry.languageId;
+        const folderPath = entry.folderPath;
+
+        if (documentLanguageId === languageId && documentPath.includes(folderPath)) {
+          shouldShow = true;
+          break;
+        }
+      }
+
+      // If no matches found, check if document is 'sql' language
+      if (!shouldShow) {
+        if (documentLanguageId === 'sql') {
+          shouldShow = true;
+        }
+      }
+
+      if (shouldShow) {
+        statusBarItem.show();
+      } else {
+        statusBarItem.hide();
+      }
     } else {
       statusBarItem.hide();
     }
@@ -199,8 +259,10 @@ function activate(context) {
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('sqlLinter')) {
-        // Notify user to reload if settings have changed
-        vscode.window.showInformationMessage('SQL Linter configuration changed. Please reload VS Code to apply the changes.');
+        // Notify user that settings have changed
+        vscode.window.showInformationMessage('SQL Linter configuration changed.');
+        // Update status bar visibility
+        updateStatusBarVisibility();
       }
     })
   );

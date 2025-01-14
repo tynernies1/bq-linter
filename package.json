@@ -12,11 +12,9 @@
   "engines": {
     "vscode": "^1.50.0"
   },
-  "categories": [
-    "Linters"
-  ],
   "activationEvents": [
     "onLanguage:sql",
+    "onLanguage:sql-jinja",
     "onCommand:sqlLinter.runLinting"
   ],
   "main": "./extension.js",
@@ -41,6 +39,16 @@
         "aliases": [
           "SQL"
         ]
+      },
+      {
+        "id": "sql-jinja",
+        "extensions": [
+          ".sql",
+          ".sql.jinja"
+        ],
+        "aliases": [
+          "SQL Jinja"
+        ]
       }
     ],
     "diagnostics": [
@@ -49,6 +57,7 @@
         "source": "sql-linter"
       },
       {
+        "language": "sql-jinja",
         "source": "sql-linter"
       }
     ],
@@ -70,6 +79,16 @@
           "type": "number",
           "default": 10,
           "description": "Maximum number of requests per minute for live linting"
+        },
+        "sqlLinter.languageFolders": {
+          "type": "array",
+          "default": [
+            {
+              "languageId": "sql-jinja",
+              "folderPath": "target/compiled/"
+            }
+          ],
+          "description": "Array of languageId and folderPath pairs to specify where linting should be enabled"
         }
       }
     },
