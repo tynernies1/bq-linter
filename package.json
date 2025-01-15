@@ -2,12 +2,12 @@
   "name": "bq-dryrun-sql-linter",
   "displayName": "BQ Dry Run SQL Linter",
   "description": "An experimental VS Code extension checks SQL code against BQ dryrun in VS Code",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "timle",
   "icon": "images/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/timle2/VSCode-Extension-BQ-Dry-Run-Linter"
+    "url": "https://github.com/timle2/VSCode-Extension-bq-dryrun-sql-linter"
   },
   "engines": {
     "vscode": "^1.50.0"
