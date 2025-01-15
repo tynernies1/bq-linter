@@ -13,6 +13,7 @@
     "vscode": "^1.50.0"
   },
   "activationEvents": [
+    "onStartupFinished",
     "onLanguage:sql",
     "onLanguage:sql-jinja",
     "onCommand:sqlLinter.runLinting"
@@ -84,11 +85,11 @@
           "type": "array",
           "default": [
             {
-              "languageId": "sql-jinja",
+              "fileSuffix": ".sql",
               "folderPath": "target/compiled/"
             }
           ],
-          "description": "Array of languageId and folderPath pairs to specify where linting should be enabled"
+          "description": "Array of fileSuffix and folderPath pairs to specify where linting should be enabled"
         }
       }
     },

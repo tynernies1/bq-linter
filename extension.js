@@ -2,6 +2,7 @@
 const vscode = require('vscode');
 const { BigQuery } = require('@google-cloud/bigquery');
 const debounce = require('lodash.debounce');
+const path = require('path');
 
 let statusBarItem;
 
@@ -29,14 +30,20 @@ function activate(context) {
 
   // Create status bar item
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-  statusBarItem.text = 'dryrun: active';
+  statusBarItem.text = 'Dry Run Ready';
   context.subscriptions.push(statusBarItem);
 
   // Function to perform linting
   const lintDocument = async (document, ignoreFileType = false) => {
+    // Only process documents with the 'file' scheme
+    if (document.uri.scheme !== 'file') {
+      console.log(`Ignoring resource with scheme '${document.uri.scheme}'`);
+      return;
+    }
+
     if (!ignoreFileType) {
-      const documentLanguageId = document.languageId;
       const documentPath = document.uri.fsPath;
+      const documentLanguageId = document.languageId;
 
       // Get the configuration setting
       const config = vscode.workspace.getConfiguration('sqlLinter');
@@ -44,13 +51,31 @@ function activate(context) {
 
       let shouldLint = false;
 
-      // Check if the document matches any of the language-folder pairs
+      // Get the relative path of the document within the workspace
+      const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+      const relativePath = workspaceFolder
+        ? path.relative(workspaceFolder.uri.fsPath, documentPath)
+        : documentPath;
+
+      let fileName = path.basename(documentPath);
+
+      // Remove '.git' if present at the end of the file name
+      if (fileName.endsWith('.git')) {
+        fileName = fileName.slice(0, -4); // Remove last 4 characters
+      }
+
+      // Check if the document matches any of the fileSuffix-folderPath pairs
       for (const entry of languageFolders) {
-        const languageId = entry.languageId;
+        const fileSuffix = entry.fileSuffix;
         const folderPath = entry.folderPath;
 
-        if (documentLanguageId === languageId && documentPath.includes(folderPath)) {
+        console.log(`Checking fileSuffix '${fileSuffix}' in folder '${folderPath}' for '${relativePath}'`);
+
+        if (fileName.endsWith(fileSuffix) && relativePath.includes(folderPath)) {
           shouldLint = true;
+          console.log(
+            `Linting enabled for files with suffix '${fileSuffix}' in folder '${folderPath}'`
+          );
           break;
         }
       }
@@ -59,7 +84,9 @@ function activate(context) {
       if (!shouldLint) {
         if (documentLanguageId === 'sql') {
           shouldLint = true;
+          console.log("Linting enabled for languageId 'sql'");
         } else {
+          console.log(`Linting not enabled for file '${documentPath}'`);
           // Do not lint this document
           return;
         }
@@ -72,6 +99,10 @@ function activate(context) {
     const bigquery = new BigQuery();
 
     try {
+      // Update status bar to show progress
+      statusBarItem.text = '$(sync~spin) Dry Run...';
+      statusBarItem.show();
+
       // Configure dry run query
       const options = {
         query: sqlCode,
@@ -90,7 +121,7 @@ function activate(context) {
       // Collect diagnostics from BigQuery errors
       const diagnostics = [];
       if (error.errors && error.errors.length > 0) {
-        error.errors.forEach(err => {
+        error.errors.forEach((err) => {
           const message = err.message;
 
           // Try to extract line and character from error message
@@ -136,6 +167,10 @@ function activate(context) {
       }
       diagnosticCollection.set(document.uri, diagnostics);
       console.error('Query not performed:', error);
+    } finally {
+      // Reset status bar item
+      statusBarItem.text = 'Dry Run Ready';
+      statusBarItem.show();
     }
   };
 
@@ -160,7 +195,9 @@ function activate(context) {
     }
 
     if (requestCount >= rateLimit) {
-      vscode.window.showWarningMessage('Rate limit exceeded for live linting. Change settings or slow down.');
+      vscode.window.showWarningMessage(
+        'Rate limit exceeded for live linting. Change settings or slow down.'
+      );
       return;
     }
 
@@ -198,8 +235,16 @@ function activate(context) {
     const editor = vscode.window.activeTextEditor;
     if (editor) {
       const document = editor.document;
-      const documentLanguageId = document.languageId;
+
+      // Only process documents with the 'file' scheme
+      if (document.uri.scheme !== 'file') {
+        console.log(`Ignoring resource with scheme '${document.uri.scheme}'`);
+        statusBarItem.hide();
+        return;
+      }
+
       const documentPath = document.uri.fsPath;
+      const documentLanguageId = document.languageId;
 
       // Get the configuration setting
       const config = vscode.workspace.getConfiguration('sqlLinter');
@@ -207,13 +252,29 @@ function activate(context) {
 
       let shouldShow = false;
 
-      // Check if the document matches any of the language-folder pairs
+      // Get the relative path of the document within the workspace
+      const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+      const relativePath = workspaceFolder
+        ? path.relative(workspaceFolder.uri.fsPath, documentPath)
+        : documentPath;
+
+      let fileName = path.basename(documentPath);
+
+      // Remove '.git' if present at the end of the file name
+      if (fileName.endsWith('.git')) {
+        fileName = fileName.slice(0, -4); // Remove last 4 characters
+      }
+
+      // Check if the document matches any of the fileSuffix-folderPath pairs
       for (const entry of languageFolders) {
-        const languageId = entry.languageId;
+        const fileSuffix = entry.fileSuffix;
         const folderPath = entry.folderPath;
 
-        if (documentLanguageId === languageId && documentPath.includes(folderPath)) {
+        if (fileName.endsWith(fileSuffix) && relativePath.includes(folderPath)) {
           shouldShow = true;
+          console.log(
+            `Status bar visible for files with suffix '${fileSuffix}' in folder '${folderPath}'`
+          );
           break;
         }
       }
@@ -222,6 +283,9 @@ function activate(context) {
       if (!shouldShow) {
         if (documentLanguageId === 'sql') {
           shouldShow = true;
+          console.log("Status bar visible for languageId 'sql'");
+        } else {
+          console.log(`Status bar not visible for file '${documentPath}'`);
         }
       }
 
@@ -272,5 +336,5 @@ function deactivate() {}
 
 module.exports = {
   activate,
-  deactivate
+  deactivate,
 };
