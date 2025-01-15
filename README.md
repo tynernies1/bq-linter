@@ -6,7 +6,8 @@ VSCode Extension bq dryrun sql linter is a Visual Studio Code extension that che
 
 - Lint SQL files by performing a dry run against a BigQuery server.
 - Display errors and warnings inline in the editor.
-- Supports `.sql` files.
+- Supports `.sql` and `.sql.jinja` files.
+- Activates on startup to ensure seamless integration.
 
 ## Installation
 
@@ -26,8 +27,18 @@ Alternatively, you can install it directly from the marketplace link:
 
 ## Usage
 
-- Open a `.sql` file in Visual Studio Code.
+### Lint on Save (default)
+
+- Open a `.sql` or `.sql.jinja` file in Visual Studio Code.
 - The extension will automatically perform a dry run against the BigQuery server and display any errors or warnings in the Problems panel and inline in the editor.
+
+### Manual Lint
+
+- Command Palette -> `>BQ Dry Run SQL Linter: Run Linting`
+
+### Live Lint
+
+- See below `sqlLinter.liveLinting` to enable, along with settings to customize the frequency of BQ server connections to run the dry run process.
 
 ## Requirements
 
@@ -41,18 +52,72 @@ If you are running dbt locally, you've already done this. For others, see:
 
 ## Extension Settings
 
-**Lint on Save**: By default, the extension lints SQL files when they are saved.
+### Extension Activation
 
-**Live Lint Option**: Users can enable live linting through the extension settings (`sqlLinter.liveLinting`).
+Starting from version 0.0.2, the extension activates on startup (`onStartupFinished`). This ensures that the extension is active even when opening a `.sql.jinja` file first, resolving previous issues where the extension did not activate unless a `.sql` file was opened first.
 
-**Debouncing and Rate Limiting**: When live linting is enabled, debouncing and rate limiting control the number of requests to the BigQuery server, minimizing the number of requests per minute.
+### Lint on Save
 
-**Configurable Settings**: Users can adjust the debounce interval (`sqlLinter.debounceInterval`) and rate limit (`sqlLinter.rateLimit`) in the extension settings to suit their preferences.
+By default, the extension lints SQL files when they are saved.
 
-<!-- This extension contributes the following settings:
+### Live Lint Option
 
-- `sql-linter.projectId`: Set your Google Cloud project ID.
-- `sql-linter.credentials`: Path to your service account credentials JSON file. -->
+Users can enable live linting through the extension settings (`sqlLinter.liveLinting`).
+
+### Debouncing and Rate Limiting
+
+When live linting is enabled, debouncing and rate limiting control the number of requests to the BigQuery server, minimizing the number of requests per minute.
+
+### Configurable Settings
+
+- **Debounce Interval (`sqlLinter.debounceInterval`)**: Adjust the debounce interval in milliseconds.
+- **Rate Limit (`sqlLinter.rateLimit`)**: Set the maximum number of requests per minute.
+- **Language Folders (`sqlLinter.languageFolders`)**: Specify custom file suffixes and folder paths where linting should be enabled.
+
+#### sqlLinter.languageFolders
+
+By default all files with language type '.sql' will be linted. 
+
+Additionally, the `sqlLinter.languageFolders` setting allows you to define an array of `fileSuffix` and `folderPath` pairs to specify where linting should be enabled. This is particularly useful if your project uses custom file extensions or organizes SQL files in specific directories.
+
+**Default Value**:
+dbt opinionated:
+```json
+[
+  {
+    "fileSuffix": ".sql",
+    "folderPath": "target/compiled/"
+  }
+]
+```
+
+**Usage Example**:
+
+```json
+"sqlLinter.languageFolders": [
+  {
+    "fileSuffix": ".sql",
+    "folderPath": "src/queries/"
+  },
+  {
+    "fileSuffix": ".sql.jinja",
+    "folderPath": "templates/sql/"
+  }
+]
+```
+
+In this example:
+
+- Files ending with `.sql` in the `src/queries/` directory will be linted.
+- Files ending with `.sql.jinja` in the `templates/sql/` directory will also be linted.
+
+This setting provides flexibility to lint SQL files located in various directories and with different file extensions, accommodating diverse project structures.
+
+**Configuration Steps**:
+
+1. Open your VS Code settings (`Ctrl`+`Comma` or `Cmd`+`Comma`).
+2. Search for `sqlLinter.languageFolders`.
+3. Edit the setting by adding your desired `fileSuffix` and `folderPath` pairs.
 
 ## Dev Work
 
@@ -66,7 +131,7 @@ Open the project folder in VS Code:
 Launch the extension in a new Extension Development Host window:
 
 - Press `F5` in VS Code. This will compile the extension and open a new window where the extension is running.
-- In the new window, create or open a `.sql` file and write some SQL code.
+- In the new window, create or open a `.sql` or `.sql.jinja` file and write some SQL code.
 
 As you write, the extension will send your SQL code to BigQuery for a dry run. Any errors returned from BigQuery will be highlighted directly in the editor.
 
@@ -87,6 +152,10 @@ Refer to the [Publishing Extension Guide](https://code.visualstudio.com/api/work
 - May not handle all types of SQL syntax variations.
 
 ## Release Notes
+
+### 0.0.2
+
+- Added activation on startup to support `.sql.jinja` files when opened first.
 
 ### 0.0.1
 

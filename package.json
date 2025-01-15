@@ -2,7 +2,7 @@
   "name": "bq-dryrun-sql-linter",
   "displayName": "BQ Dry Run SQL Linter",
   "description": "An experimental VS Code extension checks SQL code against BQ dryrun in VS Code",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "timle",
   "icon": "images/icon.png",
   "repository": {
@@ -12,11 +12,10 @@
   "engines": {
     "vscode": "^1.50.0"
   },
-  "categories": [
-    "Linters"
-  ],
   "activationEvents": [
+    "onStartupFinished",
     "onLanguage:sql",
+    "onLanguage:sql-jinja",
     "onCommand:sqlLinter.runLinting"
   ],
   "main": "./extension.js",
@@ -41,6 +40,16 @@
         "aliases": [
           "SQL"
         ]
+      },
+      {
+        "id": "sql-jinja",
+        "extensions": [
+          ".sql",
+          ".sql.jinja"
+        ],
+        "aliases": [
+          "SQL Jinja"
+        ]
       }
     ],
     "diagnostics": [
@@ -49,6 +58,7 @@
         "source": "sql-linter"
       },
       {
+        "language": "sql-jinja",
         "source": "sql-linter"
       }
     ],
@@ -70,6 +80,16 @@
           "type": "number",
           "default": 10,
           "description": "Maximum number of requests per minute for live linting"
+        },
+        "sqlLinter.languageFolders": {
+          "type": "array",
+          "default": [
+            {
+              "fileSuffix": ".sql",
+              "folderPath": "target/compiled/"
+            }
+          ],
+          "description": "Array of fileSuffix and folderPath pairs to specify where linting should be enabled"
         }
       }
     },
