@@ -113,9 +113,10 @@
     ]
   },
   "scripts": {
-    "compile": "tsc -p ./",
+    "compile": "tsc -b",
     "watch": "tsc -watch -p ./",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "build": "vsce package"
   },
   "devDependencies": {
     "@types/node": "^14.14.6",
@@ -125,6 +126,7 @@
   },
   "dependencies": {
     "@google-cloud/bigquery": "^7.4.0",
+    "js-yaml": "^4.1.0",
     "lodash.debounce": "^4.0.8"
   }
 }

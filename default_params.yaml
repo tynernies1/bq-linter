@@ -1,0 +1,7 @@
+sql_params:
+  project_id: kohls-bda-prd
+  location_dataset: dp_location
+  merchandising_dataset: dp_merchandising
+  sales_dataset: dp_sales
+  logistics_dataset: dp_logistics
+  finance_dataset: dp_finance

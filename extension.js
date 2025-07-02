@@ -2,9 +2,25 @@
 const vscode = require('vscode');
 const { BigQuery } = require('@google-cloud/bigquery');
 const debounce = require('lodash.debounce');
+const fs = require('fs');
 const path = require('path');
+const yaml = require('js-yaml');
 
 let statusBarItem;
+
+function loadYamlParams() {
+  const configPath = path.join(__dirname, 'default_params.yaml');
+
+  try {
+    const file = fs.readFileSync(configPath, 'utf8');
+    return yaml.load(file) || {};
+  } catch (err) {
+    vscode.window.showWarningMessage(`Could not load config: ${configPath}`);
+    return {};
+  }
+}
+
+
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -32,6 +48,22 @@ function activate(context) {
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
   statusBarItem.text = 'Dry Run Ready';
   context.subscriptions.push(statusBarItem);
+
+function replaceParams(sql, params = {}) {
+  let result = sql;
+
+  for (const [key, value] of Object.entries(params)) {
+    const pattern = new RegExp(`{{\\s*params\\.${key}\\s*}}`, 'g');
+    result = result.replace(pattern, value);
+  }
+
+  // Replace {{ ds }} with today's date in YYYY-MM-DD format
+  const today = new Date();
+  const ds = today.toISOString().slice(0, 10); // e.g. "2025-07-02"
+  result = result.replace(/{{\s*ds\s*}}/g, ds);
+
+  return result;
+}
 
   // Function to perform linting
   const lintDocument = async (document, ignoreFileType = false) => {
@@ -93,7 +125,11 @@ function activate(context) {
       }
     }
 
-    const sqlCode = document.getText();
+    const rawSql = document.getText();
+    const params = loadYamlParams().sql_params;  
+    const sqlCode = replaceParams(rawSql, params);
+
+    console.log(params)
 
     // Initialize BigQuery client
     const bigquery = new BigQuery();
@@ -102,6 +138,7 @@ function activate(context) {
       // Update status bar to show progress
       statusBarItem.text = '$(sync~spin) Dry Run...';
       statusBarItem.show();
+      console.log('Final SQL being dry run:\n', sqlCode);
 
       // Configure dry run query
       const options = {
@@ -109,7 +146,7 @@ function activate(context) {
         dryRun: true,
         useQueryCache: false,
       };
-
+      
       // Run the dry run
       await bigquery.createQueryJob(options);
 
